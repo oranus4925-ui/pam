@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกม นักต่อวงจรตัวน้อย</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .option-btn { transition: all 0.15s ease; }
+        .option-btn:active { transform: scale(0.97); }
+        .option-correct { background-color: rgba(16,185,129,0.25) !important; border-color: #10b981 !important; }
+        .option-wrong { background-color: rgba(239,68,68,0.25) !important; border-color: #ef4444 !important; }
+        .option-disabled { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-indigo-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-xl bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-indigo-500/30">
+
+        <div id="screen-start" class="p-8 text-center flex flex-col items-center justify-center space-y-6">
+            <div class="inline-block p-4 bg-indigo-500/10 rounded-full text-indigo-400 mb-2 border border-indigo-500/20">
+                <span class="text-5xl">⚡</span>
+            </div>
+            <h1 class="text-3xl font-bold text-white tracking-wide">นักต่อวงจรตัวน้อย</h1>
+            <p class="text-slate-400 max-w-sm text-sm leading-relaxed">
+                เกมทดสอบความรู้สัญลักษณ์อุปกรณ์ไฟฟ้า ม.4 วางสัญลักษณ์ลงในช่องว่างให้ถูกต้องเพื่อต่อวงจรให้สำเร็จ!
+            </p>
+
+            <div class="bg-indigo-950/60 p-4 rounded-2xl border border-indigo-500/20 text-left w-full max-w-md space-y-2 text-sm text-slate-300">
+                <div class="font-semibold text-indigo-400 mb-1">🎮 วิธีการเล่น:</div>
+                <div class="flex items-start gap-2"><span>1.</span><span>ดูวงจรไฟฟ้าที่มีช่องว่าง (สัญลักษณ์ <span class="text-yellow-400 font-bold">[ ? ]</span>)</span></div>
+                <div class="flex items-start gap-2"><span>2.</span><span>เลือกสัญลักษณ์รูปภาพอุปกรณ์ไฟฟ้าให้ถูกต้อง</span></div>
+                <div class="flex items-start gap-2"><span>3.</span><span>ต่อวงจรให้ครบเพื่อผ่านไปด่านถัดไป</span></div>
+                <div class="flex items-start gap-2"><span>4.</span><span>มี 10 ข้อ ข้อละ 15 วินาที (ตอบเร็วได้คะแนนโบนัสเยอะ!)</span></div>
+            </div>
+
+            <div class="w-full max-w-md text-left">
+                <label for="player-name" class="text-xs text-slate-400 block mb-1.5">ชื่อผู้เล่น (ไม่บังคับ)</label>
+                <input id="player-name" type="text" maxlength="30" placeholder="กรอกชื่อของคุณ"
+                    class="w-full px-4 py-3 bg-indigo-950/60 border border-indigo-500/30 rounded-2xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400/60" />
+            </div>
+
+            <button onclick="startGame()" class="w-full max-w-md py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-white font-bold rounded-2xl shadow-lg transition-all transform active:scale-95 cursor-pointer text-lg">
+                เริ่มเกมเลย! 🚀
+            </button>
+        </div>
+
+        <div id="screen-game" class="hidden p-6 flex flex-col space-y-6">
+            <div class="flex justify-between items-center bg-indigo-950/60 px-4 py-3 rounded-2xl border border-indigo-500/20">
+                <div>
+                    <span class="text-xs text-slate-400 block">ด่านที่</span>
+                    <span id="current-question-num" class="text-xl font-bold text-cyan-400">1</span><span class="text-slate-500 text-sm">/10</span>
+                </div>
+                <div class="flex-1 mx-6">
+                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>เวลา</span>
+                        <span id="timer-text" class="font-bold text-amber-400">15s</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="timer-bar" class="bg-amber-400 h-full w-full transition-all duration-1000 linear"></div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 block">คะแนน</span>
+                    <span id="current-score" class="text-xl font-bold text-emerald-400">0</span>
+                </div>
+            </div>
+
+            <div class="bg-indigo-950 p-6 rounded-2xl border border-indigo-500/30 flex flex-col items-center justify-center min-h-[140px] relative shadow-inner">
+                <div class="absolute top-3 left-3 text-xs text-indigo-300 bg-indigo-900/80 px-2.5 py-1 rounded-lg border border-indigo-500/30">
+                    แผนผังวงจรไฟฟ้า
+                </div>
+                <div id="circuit-display" class="text-center mt-4 text-3xl md:text-4xl tracking-widest text-yellow-300 font-mono">
+                </div>
+            </div>
+
+            <div id="question-desc" class="text-center text-sm font-medium text-slate-200 min-h-[40px] flex items-center justify-center px-2">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3" id="options-container">
+            </div>
+        </div>
+
+        <div id="screen-result" class="hidden p-8 text-center flex flex-col items-center justify-center space-y-6">
+            <div class="inline-block p-4 bg-emerald-500/10 rounded-full text-emerald-400 mb-2 border border-emerald-500/20">
+                <span class="text-5xl">🏆</span>
+            </div>
+            <h2 class="text-2xl font-bold text-white">สรุปผลคะแนนนักต่อวงจร</h2>
+
+            <div class="bg-indigo-950 p-6 rounded-2xl border border-indigo-500/20 w-full max-w-md space-y-4">
+                <div class="flex justify-between items-center border-b border-indigo-900 pb-3">
+                    <span class="text-slate-400 text-sm">คะแนนรวมทั้งหมด</span>
+                    <span id="final-score" class="text-3xl font-extrabold text-emerald-400">0</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-indigo-900/40 p-3 rounded-xl border border-indigo-500/20">
+                        <span class="text-xs text-slate-400 block mb-1">ตอบถูก</span>
+                        <span id="stat-correct" class="text-xl font-bold text-cyan-400">0/10</span>
+                    </div>
+                    <div class="bg-indigo-900/40 p-3 rounded-xl border border-indigo-500/20">
+                        <span class="text-xs text-slate-400 block mb-1">ระดับฝีมือ</span>
+                        <span id="stat-grade" class="text-lg font-bold text-amber-400">ช่างไฟมือโปร</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="save-status" class="text-xs text-slate-400 min-h-[18px]"></div>
+
+            <button onclick="restartGame()" class="w-full max-w-md py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-white font-bold rounded-2xl shadow-lg transition-all transform active:scale-95 cursor-pointer">
+                เล่นอีกครั้ง 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ข้อมูล 10 ข้อ เน้นรูปภาพสัญลักษณ์ (ไม่มีสูตรฟิสิกส์)
+        const questions = [
+            {
+                circuit: "🔋 ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่ใช้ 'ตัดหรือต่อวงจร' ให้ถูกต้อง",
+                correct: "🎚️ สวิตช์ไฟฟ้า (Switch)",
+                options: ["🎚️ สวิตช์ไฟฟ้า (Switch)", "⚡ ตัวต้านทาน (Resistor)", "🔋 แบตเตอรี่ (Battery)", "🔌 ฟิวส์ (Fuse)"]
+            },
+            {
+                circuit: "🔋 ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่ทำหน้าที่ 'ให้พลังงานไฟฟ้า' (แหล่งกำเนิด)",
+                correct: "🔋 แบตเตอรี่/เซลล์ไฟฟ้า",
+                options: ["💡 หลอดไฟ (Lamp)", "🔋 แบตเตอรี่/เซลล์ไฟฟ้า", "🎚️ สวิตช์ไฟฟ้า (Switch)", "🧲 ขดลวด (Inductor)"]
+            },
+            {
+                circuit: "🔋 ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่ทำหน้าที่ 'ต้านทานการไหลของกระแสไฟฟ้า'",
+                correct: "⚡ ตัวต้านทาน (Resistor)",
+                options: ["⚡ ตัวต้านทาน (Resistor)", "📺 ไดโอด (Diode)", "🔋 แบตเตอรี่ (Battery)", "🎚️ สวิตช์ไฟฟ้า (Switch)"]
+            },
+            {
+                circuit: "🔌 ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ป้องกันความเสียหาย เมื่อกระแสไฟฟ้าไหลผ่านมากเกินไป",
+                correct: "🔌 ฟิวส์ (Fuse)",
+                options: ["🔌 ฟิวส์ (Fuse)", "🔋 แบตเตอรี่ (Battery)", "⚡ ตัวต้านทาน (Resistor)", "💡 หลอดไฟ (Lamp)"]
+            },
+            {
+                circuit: "🔋 ── ⚡ ── [ ❓ ]",
+                desc: "เลือกสัญลักษณ์เครื่องมือวัดทางไฟฟ้าที่ใช้วัด 'กระแสไฟฟ้า'",
+                correct: "Ⓐ แอมมิเตอร์ (Ammeter)",
+                options: ["Ⓥ โวลต์มิเตอร์ (Voltmeter)", "Ⓐ แอมมิเตอร์ (Ammeter)", "Ω โอห์มมิเตอร์ (Ohmmeter)", "🎚️ สวิตช์ (Switch)"]
+            },
+            {
+                circuit: "🔋 ── 💡 ── [ ❓ ]",
+                desc: "เลือกสัญลักษณ์เครื่องมือวัดทางไฟฟ้าที่ใช้วัด 'ความต่างศักย์ไฟฟ้า'",
+                correct: "Ⓥ โวลต์มิเตอร์ (Voltmeter)",
+                options: ["Ⓐ แอมมิเตอร์ (Ammeter)", "Ⓥ โวลต์มิเตอร์ (Voltmeter)", "🔌 ฟิวส์ (Fuse)", "🔋 แบตเตอรี่ (Battery)"]
+            },
+            {
+                circuit: "⚡ ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์อิเล็กทรอนิกส์ที่ยอมให้กระแสไฟฟ้าไหลผ่านได้ 'ทิศทางเดียว'",
+                correct: "↗️ ไดโอด (Diode)",
+                options: ["⚡ ตัวต้านทาน (Resistor)", "↗️ ไดโอด (Diode)", "🎚️ สวิตช์ (Switch)", "🔋 เซลล์ไฟฟ้า (Battery)"]
+            },
+            {
+                circuit: "🔋 ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่ทำหน้าที่ 'เก็บและคายประจุไฟฟ้า'",
+                correct: "🅫 ตัวเก็บประจุ (Capacitor)",
+                options: ["🅫 ตัวเก็บประจุ (Capacitor)", "🔌 ฟิวส์ (Fuse)", "Ⓥ โวลต์มิเตอร์ (Voltmeter)", "💡 หลอดไฟ (Lamp)"]
+            },
+            {
+                circuit: "⚡ ── [ ❓ ] ── 💡",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่สามารถ 'ปรับเปลี่ยนค่าความต้านทานได้'",
+                correct: "🎛️ ตัวต้านทานปรับค่าได้",
+                options: ["🎛️ ตัวต้านทานปรับค่าได้", "🔋 แบตเตอรี่ (Battery)", "🎚️ สวิตช์เปิด-ปิด", "Ⓐ แอมมิเตอร์ (Ammeter)"]
+            },
+            {
+                circuit: "🔋 ── [ ❓ ] ── 🧲",
+                desc: "เลือกสัญลักษณ์อุปกรณ์ที่ทำหน้าที่ 'ควบคุมทิศทางกระแสไฟด้วยแม่เหล็กไฟฟ้า' (สวิตช์แบบรีเลย์)",
+                correct: "🧷 รีเลย์ (Relay)",
+                options: ["🧷 รีเลย์ (Relay)", "🅫 ตัวเก็บประจุ (Capacitor)", "↗️ ไดโอด (Diode)", "🔌 ฟิวส์ (Fuse)"]
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let timeLeft = 15;
+        let timerInterval = null;
+        let playerName = "";
+        const QUESTION_TIME = 15;
+
+        // URL ของ Google Apps Script Web App ที่ deploy ไว้แล้ว (เชื่อมกับ Sheet ID 1cK1yXp_lv7xjEedgIopwYKXMV1vm7zBT0rfZd05_BUY)
+        const SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQ7ssiPNw1a4cU_InVdu-NBQiC3o4J4jUs-jbPzi2QhiUSUNnpjnmU3eDzTJ5qnobFGQ/exec";
+
+        /**
+         * ส่งข้อมูลไปยัง Google Apps Script ผ่าน JSONP
+         * ใช้ <script> tag แทน iframe/fetch เพื่อเลี่ยงปัญหา CORS
+         * เพราะ Apps Script Web App ไม่ตั้งค่า Access-Control-Allow-Origin ให้ fetch เรียกตรง ๆ ได้
+         */
+        function sendJSONP(url, params) {
+            return new Promise((resolve, reject) => {
+                const callbackName = "jsonpCallback_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+
+                // timeout กันกรณีเครือข่ายมีปัญหาหรือ Apps Script ไม่ตอบกลับ
+                const timeoutId = setTimeout(() => {
+                    cleanup();
+                    reject(new Error("หมดเวลาเชื่อมต่อ (timeout)"));
+                }, 15000);
+
+                function cleanup() {
+                    clearTimeout(timeoutId);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                }
+
+                window[callbackName] = function (response) {
+                    cleanup();
+                    resolve(response);
+                };
+
+                const query = Object.keys(params)
+                    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
+                    .join("&");
+
+                const script = document.createElement("script");
+                script.src = url + (url.indexOf("?") === -1 ? "?" : "&") + query + "&callback=" + callbackName;
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error("โหลดสคริปต์ล้มเหลว (network/CORS)"));
+                };
+
+                document.body.appendChild(script);
+            });
+        }
+
+        function saveResultToSheet(data) {
+            const statusEl = $("save-status");
+            if (statusEl) statusEl.textContent = "กำลังบันทึกคะแนนลง Google Sheet...";
+
+            sendJSONP(SHEET_SCRIPT_URL, data)
+                .then(response => {
+                    if (statusEl) {
+                        if (response && response.status === "success") {
+                            statusEl.textContent = "✅ บันทึกคะแนนเรียบร้อยแล้ว";
+                        } else {
+                            statusEl.textContent = "⚠️ บันทึกไม่สำเร็จ: " + (response && response.message ? response.message : "ไม่ทราบสาเหตุ");
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (statusEl) statusEl.textContent = "⚠️ บันทึกคะแนนไม่สำเร็จ: " + err.message;
+                });
+        }
+
+        function $(id) { return document.getElementById(id); }
+
+        function showScreen(id) {
+            ["screen-start", "screen-game", "screen-result"].forEach(s => {
+                $(s).classList.toggle("hidden", s !== id);
+            });
+        }
+
+        function startGame() {
+            const nameInput = $("player-name");
+            playerName = (nameInput && nameInput.value.trim()) || "ไม่ระบุชื่อ";
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            showScreen("screen-game");
+            loadQuestion();
+        }
+
+        function restartGame() {
+            showScreen("screen-start");
+        }
+
+        function shuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            timeLeft = QUESTION_TIME;
+
+            const q = questions[currentIndex];
+            $("current-question-num").textContent = currentIndex + 1;
+            $("current-score").textContent = score;
+            $("circuit-display").textContent = q.circuit;
+            $("question-desc").textContent = q.desc;
+            $("timer-text").textContent = timeLeft + "s";
+
+            const bar = $("timer-bar");
+            bar.style.transition = "none";
+            bar.style.width = "100%";
+            bar.classList.remove("bg-red-500");
+            bar.classList.add("bg-amber-400");
+            // force reflow so the width reset takes effect before transitions resume
+            void bar.offsetWidth;
+            bar.style.transition = "";
+
+            const optionsContainer = $("options-container");
+            optionsContainer.innerHTML = "";
+            const shuffledOptions = shuffle(q.options);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn text-left px-4 py-3 bg-indigo-950/60 border border-indigo-500/30 rounded-2xl text-sm font-medium text-slate-100 hover:bg-indigo-900/60 hover:border-cyan-400/50 cursor-pointer";
+                btn.textContent = opt;
+                btn.onclick = () => selectAnswer(btn, opt, q.correct);
+                optionsContainer.appendChild(btn);
+            });
+
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        function tick() {
+            timeLeft--;
+            $("timer-text").textContent = Math.max(timeLeft, 0) + "s";
+            const pct = Math.max((timeLeft / QUESTION_TIME) * 100, 0);
+            $("timer-bar").style.width = pct + "%";
+
+            if (timeLeft <= 5) {
+                $("timer-bar").classList.remove("bg-amber-400");
+                $("timer-bar").classList.add("bg-red-500");
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                selectAnswer(null, null, questions[currentIndex].correct);
+            }
+        }
+
+        function selectAnswer(btnEl, chosen, correctAnswer) {
+            clearInterval(timerInterval);
+
+            const buttons = Array.from($("options-container").children);
+            buttons.forEach(b => {
+                b.classList.add("option-disabled");
+                b.onclick = null;
+                if (b.textContent === correctAnswer) {
+                    b.classList.add("option-correct");
+                }
+            });
+
+            const isCorrect = chosen === correctAnswer;
+
+            if (isCorrect) {
+                correctCount++;
+                // เร็วกว่า = คะแนนโบนัสมากกว่า, อย่างน้อยได้ 50 คะแนนถ้าตอบถูก
+                const bonus = Math.max(timeLeft, 0) * 5;
+                score += 50 + bonus;
+            } else if (btnEl) {
+                btnEl.classList.add("option-wrong");
+            }
+
+            $("current-score").textContent = score;
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    finishGame();
+                }
+            }, 1200);
+        }
+
+        function finishGame() {
+            $("final-score").textContent = score;
+            $("stat-correct").textContent = correctCount + "/" + questions.length;
+
+            let grade = "มือใหม่หัดต่อวงจร";
+            if (correctCount === questions.length) {
+                grade = "ปรมาจารย์วิศวกรไฟฟ้า";
+            } else if (correctCount >= 8) {
+                grade = "ช่างไฟมือโปร";
+            } else if (correctCount >= 6) {
+                grade = "ช่างไฟฝีมือดี";
+            } else if (correctCount >= 4) {
+                grade = "ช่างไฟฝึกหัด";
+            }
+            $("stat-grade").textContent = grade;
+
+            showScreen("screen-result");
+
+            saveResultToSheet({
+                name: playerName,
+                score: score,
+                correct: correctCount,
+                total: questions.length,
+                grade: grade,
+                timestamp: new Date().toISOString()
+            });
+        }
+    </script>
+</body>
+</html>
